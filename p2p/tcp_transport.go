@@ -1,6 +1,7 @@
 package p2p
 
 import (
+	"fmt"
 	"net"
 	"sync"
 )
@@ -11,4 +12,37 @@ type TCPTransport struct {
 
 	mu    sync.RWMutex
 	peers map[net.Addr]Peer
+}
+
+func NewTCPTransport(listenerAddr string) *TCPTransport {
+	return &TCPTransport{
+		ListenAddress: listenerAddr,
+	}
+}
+
+func (t *TCPTransport) ListenAndAccept() error {
+	var err error
+
+	t.Listener, err = net.Listen("tcp", t.ListenAddress)
+	if err != nil {
+		return err
+	}
+
+	go t.startAcceptLoop()
+	return nil
+}
+
+func (t *TCPTransport) startAcceptLoop() {
+	for {
+		conn, err := t.Listener.Accept()
+		if err != nil {
+			fmt.Printf("TCP accept error: %s", err)
+		}
+
+		go t.handleConn(conn)
+	}
+}
+
+func (t *TCPTransport) handleConn(conn net.Conn) {
+
 }
